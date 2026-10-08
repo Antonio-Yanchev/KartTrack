@@ -1,3 +1,4 @@
 <Solution>
+  <Project Path="KartTrack.Api.Tests/KartTrack.Api.Tests.csproj" />
   <Project Path="KartTrack.Api/KartTrack.Api.csproj" />
 </Solution>
