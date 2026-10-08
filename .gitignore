@@ -361,3 +361,9 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+
+# KartTrack - SQLite local database
+**/karttrack.db
+**/karttrack.db-shm
+**/karttrack.db-wal
+**/karttrack.db-journal

@@ -1,13 +1,16 @@
 using KartTrack.Api.Data;
 using KartTrack.Api.Requests;
+using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddOpenApi();
 
-builder.Services.AddSingleton<KartTrackRepository>();
+builder.Services.AddDbContext<KartTrackDbContext>(options =>
+    options.UseSqlite("Data Source=karttrack.db"));
 
+builder.Services.AddScoped<KartTrackRepository>();
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -18,14 +21,14 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-app.MapGet("/tracks", (KartTrackRepository repository) =>
+app.MapGet("/tracks",async (KartTrackRepository repository) =>
 {
-    return Results.Ok(repository.GetTracks());
+    return Results.Ok(await repository.GetTracksAsync());
 });
 
-app.MapGet("/tracks/{id}", (int id, KartTrackRepository repository) =>
+app.MapGet("/tracks/{id}", async (int id, KartTrackRepository repository) =>
 {
-    var track = repository.GetTrackById(id);
+    var track = await repository.GetTrackByIdAsync(id);
 
     if (track is null)
     {
@@ -35,14 +38,14 @@ app.MapGet("/tracks/{id}", (int id, KartTrackRepository repository) =>
     return Results.Ok(track);
 });
 
-app.MapGet("/sessions", (KartTrackRepository repository) =>
+app.MapGet("/sessions", async (KartTrackRepository repository) =>
 {
-    return Results.Ok(repository.GetSessions());
+    return Results.Ok(await repository.GetSessionsAsync());
 });
 
-app.MapGet("/sessions/{id}", (int id, KartTrackRepository repository) =>
+app.MapGet("/sessions/{id}", async (int id, KartTrackRepository repository) =>
 {
-    var session = repository.GetSessionById(id);
+    var session = await repository.GetSessionByIdAsync(id);
 
     if (session is null)
     {
@@ -52,21 +55,9 @@ app.MapGet("/sessions/{id}", (int id, KartTrackRepository repository) =>
     return Results.Ok(session);
 });
 
-app.MapPost("/sessions", (CreateSessionRequest request, KartTrackRepository repository) =>
+app.MapGet("/tracks/{trackId}/personal-best", async (int trackId, KartTrackRepository repository) =>
 {
-    var session = repository.CreateSession(request);
-
-    if (session is null)
-    {
-        return Results.BadRequest("Track does not exist.");
-    }
-
-    return Results.Created($"/sessions/{session.Id}", session);
-});
-
-app.MapGet("/tracks/{trackId}/personal-best", (int trackId, KartTrackRepository repository) =>
-{
-    var bestSession = repository.GetPersonalBestByTrackId(trackId);
+    var bestSession = await repository.GetPersonalBestByTrackIdAsync(trackId);
 
     if (bestSession is null)
     {
@@ -76,7 +67,7 @@ app.MapGet("/tracks/{trackId}/personal-best", (int trackId, KartTrackRepository 
     return Results.Ok(bestSession);
 });
 
-app.MapPost("/sessions", (CreateSessionRequest request, KartTrackRepository repository) =>
+app.MapPost("/sessions", async (CreateSessionRequest request, KartTrackRepository repository) =>
 {
     if (string.IsNullOrWhiteSpace(request.DriverName))
     {
@@ -118,7 +109,7 @@ app.MapPost("/sessions", (CreateSessionRequest request, KartTrackRepository repo
         return Results.BadRequest("Position must be greater than 0.");
     }
 
-    var session = repository.CreateSession(request);
+    var session = await repository.CreateSessionAsync(request);
 
     if (session is null)
     {
@@ -127,5 +118,12 @@ app.MapPost("/sessions", (CreateSessionRequest request, KartTrackRepository repo
 
     return Results.Created($"/sessions/{session.Id}", session);
 });
+
+app.MapGet("/", () => Results.Ok(new
+{
+    Application = "KartTrack API",
+    Status = "Running",
+    Version = "1.0"
+}));
 
 app.Run();

@@ -1,0 +1,31 @@
+@baseUrl = http://localhost:5223
+
+### Check API status
+GET {{baseUrl}}/
+Accept: application/json
+
+### Get all tracks
+GET {{baseUrl}}/tracks
+Accept: application/json
+
+### Get all sessions
+GET {{baseUrl}}/sessions
+Accept: application/json
+
+### Get personal best for track 1
+GET {{baseUrl}}/tracks/1/personal-best
+Accept: application/json
+
+### Create a new karting session
+POST {{baseUrl}}/sessions
+Content-Type: application/json
+
+{
+   "driverName": "Antonio",
+   "trackId": 1,
+   "fastestLap": 42.5,
+   "averageLap": 44.8,
+   "totalLaps": 15,
+   "kartNumber": 7,
+   "position": 2
+}
