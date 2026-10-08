@@ -21,6 +21,13 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
+app.MapGet("/", () => Results.Ok(new
+{
+    Application = "KartTrack API",
+    Status = "Running",
+    Version = "1.0"
+}));
+
 app.MapGet("/tracks",async (KartTrackRepository repository) =>
 {
     return Results.Ok(await repository.GetTracksAsync());
@@ -119,11 +126,70 @@ app.MapPost("/sessions", async (CreateSessionRequest request, KartTrackRepositor
     return Results.Created($"/sessions/{session.Id}", session);
 });
 
-app.MapGet("/", () => Results.Ok(new
+
+app.MapPut("/sessions/{id}", async (
+    int id,
+    UpdateSessionRequest request,
+    KartTrackRepository repository) =>
 {
-    Application = "KartTrack API",
-    Status = "Running",
-    Version = "1.0"
-}));
+    // Validate the request.
+    if (string.IsNullOrWhiteSpace(request.DriverName))
+        return Results.BadRequest("Driver name is required.");
+
+    if (request.TrackId <= 0)
+        return Results.BadRequest("Track ID must be valid.");
+
+    if (request.FastestLap <= 0)
+        return Results.BadRequest("Fastest lap must be greater than 0.");
+
+    if (request.AverageLap <= 0)
+        return Results.BadRequest("Average lap must be greater than 0.");
+
+    if (request.AverageLap < request.FastestLap)
+        return Results.BadRequest(
+            "Average lap cannot be faster than fastest lap.");
+
+    if (request.TotalLaps <= 0)
+        return Results.BadRequest("Total laps must be greater than 0.");
+
+    if (request.KartNumber <= 0)
+        return Results.BadRequest("Kart number must be greater than 0.");
+
+    if (request.Position <= 0)
+        return Results.BadRequest("Position must be greater than 0.");
+
+    // Check that the session exists.
+    var existingSession = await repository.GetSessionByIdAsync(id);
+
+    if (existingSession is null)
+        return Results.NotFound("Session not found.");
+
+    // Check that the referenced track exists.
+    var track = await repository.GetTrackByIdAsync(request.TrackId);
+
+    if (track is null)
+        return Results.BadRequest("Track does not exist.");
+
+    // Save changes to SQLite.
+    var updatedSession = await repository.UpdateSessionAsync(id, request);
+
+    if (updatedSession is null)
+        return Results.NotFound("Session not found.");
+
+    return Results.Ok(updatedSession);
+});
+
+
+app.MapDelete("/sessions/{id}", async (
+    int id,
+    KartTrackRepository repository) =>
+{
+    var deleted = await repository.DeleteSessionAsync(id);
+
+    if (!deleted)
+        return Results.NotFound("Session not found.");
+
+    return Results.NoContent();
+});
 
 app.Run();

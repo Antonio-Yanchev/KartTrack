@@ -19,7 +19,6 @@ Accept: application/json
 ### Create a new karting session
 POST {{baseUrl}}/sessions
 Content-Type: application/json
-
 {
    "driverName": "Antonio",
    "trackId": 1,
@@ -29,3 +28,28 @@ Content-Type: application/json
    "kartNumber": 7,
    "position": 2
 }
+
+
+### Update session 3
+PUT {{baseUrl}}/sessions/3
+Content-Type: application/json
+
+{
+   "driverName": "Antonio",
+   "trackId": 1,
+   "fastestLap": 40.25,
+   "averageLap": 43.10,
+   "totalLaps": 18,
+   "kartNumber": 7,
+   "position": 1,
+   "notes": "Improved lap time - finished first!"
+}
+
+### Delete session 3
+DELETE {{baseUrl}}/sessions/3
+
+
+### Verify session 3 was deleted
+GET {{baseUrl}}/sessions/3
+
+

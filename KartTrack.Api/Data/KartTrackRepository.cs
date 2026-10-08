@@ -79,4 +79,42 @@ public class KartTrackRepository
             .OrderBy(s => s.FastestLap)
             .FirstOrDefaultAsync();
     }
+
+
+public async Task<Session?> UpdateSessionAsync(
+    int id, UpdateSessionRequest request)
+{
+    var session = await _context.Sessions.FindAsync(id);
+
+    if (session is null)
+        return null;
+
+    session.TrackId = request.TrackId;
+    session.DriverName = request.DriverName;
+    session.FastestLap = request.FastestLap;
+    session.AverageLap = request.AverageLap;
+    session.TotalLaps = request.TotalLaps;
+    session.KartNumber = request.KartNumber;
+    session.Position = request.Position;
+    session.Notes = request.Notes ?? "";
+
+    await _context.SaveChangesAsync();
+
+    return session;
+}
+
+
+public async Task<bool> DeleteSessionAsync(int id)
+{
+    var session = await _context.Sessions.FindAsync(id);
+
+    if (session is null)
+        return false;
+
+    _context.Sessions.Remove(session);
+    await _context.SaveChangesAsync();
+
+    return true;
+}
+
 }
