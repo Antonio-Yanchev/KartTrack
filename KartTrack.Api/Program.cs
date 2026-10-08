@@ -192,4 +192,60 @@ app.MapDelete("/sessions/{id}", async (
     return Results.NoContent();
 });
 
+// Get the personal best session for a specific driver at a specific track.
+app.MapGet("/tracks/{trackId}/personal-best/{driverName}",
+    async (
+        int trackId,
+        string driverName,
+        KartTrackRepository repository) =>
+{
+    if (string.IsNullOrWhiteSpace(driverName))
+        return Results.BadRequest("Driver name is required.");
+
+    var track = await repository.GetTrackByIdAsync(trackId);
+
+    if (track is null)
+        return Results.NotFound("Track not found.");
+
+    var personalBest = await repository
+        .GetDriverPersonalBestAsync(trackId, driverName);
+
+    if (personalBest is null)
+        return Results.NotFound(
+            "No sessions found for this driver at this track.");
+
+    return Results.Ok(personalBest);
+});
+
+//returns a clean leaderboard json response rather than exposing every property of every session
+app.MapGet("/tracks/{trackId}/leaderboard",
+    async (
+        int trackId,
+        KartTrackRepository repository) =>
+{
+    var track = await repository.GetTrackByIdAsync(trackId);
+
+    if (track is null)
+        return Results.NotFound("Track not found.");
+
+    var sessions = await repository
+        .GetTrackLeaderboardAsync(trackId);
+
+    var leaderboard = sessions
+        .Select((session, index) => new
+        {
+            Rank = index + 1,
+            DriverName = session.DriverName,
+            FastestLap = session.FastestLap,
+            SessionId = session.Id,
+            KartNumber = session.KartNumber,
+            Date = session.Date
+        })
+        .ToList();
+
+    return Results.Ok(leaderboard);
+});
+
+
+
 app.Run();

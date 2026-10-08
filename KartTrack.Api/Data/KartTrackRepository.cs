@@ -80,41 +80,79 @@ public class KartTrackRepository
             .FirstOrDefaultAsync();
     }
 
+    // Get the personal best session for a specific driver on a specific track.
+    public async Task<Session?> GetDriverPersonalBestAsync(
+        int trackId, string driverName)
+    {
+        var name = driverName.Trim().ToLower();
 
-public async Task<Session?> UpdateSessionAsync(
-    int id, UpdateSessionRequest request)
-{
-    var session = await _context.Sessions.FindAsync(id);
-
-    if (session is null)
-        return null;
-
-    session.TrackId = request.TrackId;
-    session.DriverName = request.DriverName;
-    session.FastestLap = request.FastestLap;
-    session.AverageLap = request.AverageLap;
-    session.TotalLaps = request.TotalLaps;
-    session.KartNumber = request.KartNumber;
-    session.Position = request.Position;
-    session.Notes = request.Notes ?? "";
-
-    await _context.SaveChangesAsync();
-
-    return session;
+        return await _context.Sessions
+            .AsNoTracking()
+            .Where(s => s.TrackId == trackId &&
+                        s.DriverName.ToLower() == name)
+            .OrderBy(s => s.FastestLap)
+            .ThenBy(s => s.Id)
+            .FirstOrDefaultAsync();
 }
 
+    // Get the leaderboard for a specific track, showing the best session for each driver.
+    public async Task<List<Session>> GetTrackLeaderboardAsync(
+        int trackId)
+    {
+        var sessions = await _context.Sessions
+            .AsNoTracking()
+            .Where(s => s.TrackId == trackId)
+            .ToListAsync();
 
-public async Task<bool> DeleteSessionAsync(int id)
-{
-    var session = await _context.Sessions.FindAsync(id);
+        return sessions
+            .GroupBy(
+                s => s.DriverName.Trim(),
+                StringComparer.OrdinalIgnoreCase)
+            .Select(group => group
+                .OrderBy(s => s.FastestLap)
+                .ThenBy(s => s.Id)
+                .First())
+            .OrderBy(s => s.FastestLap)
+            .ThenBy(s => s.DriverName)
+            .ToList();
+    }
 
-    if (session is null)
-        return false;
 
-    _context.Sessions.Remove(session);
-    await _context.SaveChangesAsync();
 
-    return true;
-}
+    public async Task<Session?> UpdateSessionAsync(
+        int id, UpdateSessionRequest request)
+    {
+        var session = await _context.Sessions.FindAsync(id);
+
+        if (session is null)
+            return null;
+
+        session.TrackId = request.TrackId;
+        session.DriverName = request.DriverName;
+        session.FastestLap = request.FastestLap;
+        session.AverageLap = request.AverageLap;
+        session.TotalLaps = request.TotalLaps;
+        session.KartNumber = request.KartNumber;
+        session.Position = request.Position;
+        session.Notes = request.Notes ?? "";
+
+        await _context.SaveChangesAsync();
+
+        return session;
+    }
+
+
+    public async Task<bool> DeleteSessionAsync(int id)
+    {
+        var session = await _context.Sessions.FindAsync(id);
+
+        if (session is null)
+            return false;
+
+        _context.Sessions.Remove(session);
+        await _context.SaveChangesAsync();
+
+        return true;
+    }
 
 }

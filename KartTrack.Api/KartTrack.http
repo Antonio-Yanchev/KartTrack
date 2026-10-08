@@ -29,6 +29,51 @@ Content-Type: application/json
    "position": 2
 }
 
+### Create Adam's session
+POST {{baseUrl}}/sessions
+Content-Type: application/json
+
+{
+   "driverName": "Adam",
+   "trackId": 1,
+   "fastestLap": 44.80,
+   "averageLap": 47.20,
+   "totalLaps": 14,
+   "kartNumber": 12,
+   "position": 2,
+   "notes": "First session at TeamSport Edmonton"
+}
+
+### Create Daniel's session
+POST {{baseUrl}}/sessions
+Content-Type: application/json
+
+{
+   "driverName": "Daniel",
+   "trackId": 1,
+   "fastestLap": 43.15,
+   "averageLap": 46.50,
+   "totalLaps": 16,
+   "kartNumber": 9,
+   "position": 3,
+   "notes": "Practice session"
+}
+
+
+### Create Antonio's improved session
+POST {{baseUrl}}/sessions
+Content-Type: application/json
+
+{
+   "driverName": "Antonio",
+   "trackId": 1,
+   "fastestLap": 41.20,
+   "averageLap": 44.10,
+   "totalLaps": 18,
+   "kartNumber": 7,
+   "position": 1,
+   "notes": "New personal best!"
+}
 
 ### Update session 3
 PUT {{baseUrl}}/sessions/3
@@ -52,4 +97,12 @@ DELETE {{baseUrl}}/sessions/3
 ### Verify session 3 was deleted
 GET {{baseUrl}}/sessions/3
 
+
+### Get Antonio's personal best at track 1
+GET {{baseUrl}}/tracks/1/personal-best/Antonio
+Accept: application/json
+
+### Get leaderboard for track 1
+GET {{baseUrl}}/tracks/1/leaderboard
+Accept: application/json
 
