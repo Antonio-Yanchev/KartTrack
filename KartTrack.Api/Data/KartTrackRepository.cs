@@ -1,7 +1,7 @@
-﻿
-using KartTrack.Api.Models;
+﻿using KartTrack.Api.Models;
 using KartTrack.Api.Requests;
 using Microsoft.EntityFrameworkCore;
+using KartTrack.Api.Responses;
 
 namespace KartTrack.Api.Data;
 
@@ -154,5 +154,38 @@ public class KartTrackRepository
 
         return true;
     }
+
+// Get aggregated statistics for a specific driver across all sessions.
+public async Task<DriverStatsResponse?> GetDriverStatsAsync(
+    string driverName)
+{
+    var name = driverName.Trim().ToLower();
+
+    var sessions = await _context.Sessions
+        .AsNoTracking()
+        .Where(s => s.DriverName.ToLower() == name)
+        .ToListAsync();
+
+    if (sessions.Count == 0)
+        return null;
+
+    return new DriverStatsResponse
+    {
+        DriverName = sessions[0].DriverName,
+        TotalSessions = sessions.Count,
+        TotalLaps = sessions.Sum(s => s.TotalLaps),
+        TracksVisited = sessions
+            .Select(s => s.TrackId)
+            .Distinct()
+            .Count(),
+        BestLap = sessions.Min(s => s.FastestLap),
+        AverageFastestLap = Math.Round(
+            sessions.Average(s => s.FastestLap), 2),
+        AveragePosition = Math.Round(
+            sessions.Average(s => (decimal)s.Position), 2),
+        BestPosition = sessions.Min(s => s.Position)
+    };
+}
+
 
 }
