@@ -106,3 +106,18 @@ Accept: application/json
 GET {{baseUrl}}/tracks/1/leaderboard
 Accept: application/json
 
+
+
+### Get Antonio's overall statistics
+GET {{baseUrl}}/drivers/Antonio/stats
+Accept: application/json
+
+### Get Antonio's session history
+GET {{baseUrl}}/drivers/Antonio/history
+Accept: application/json
+
+### Test statistics for an unknown driver
+GET {{baseUrl}}/drivers/UnknownDriver/stats
+Accept: application/json
+
+
